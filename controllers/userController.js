@@ -125,7 +125,6 @@ const updateProfile = async (req, res) => {
             },
           );
 
-          // ⭐ أرسل buffer إلى Cloudinary
           uploadStream.end(imageFile.buffer);
         });
         imageUrl = imageUpload.secure_url;

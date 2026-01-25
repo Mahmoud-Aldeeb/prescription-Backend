@@ -10,6 +10,7 @@ import {
 } from "../controllers/userController.js";
 import authUser from "../middlewares/authUser.js";
 import upload from "../middlewares/multer.js";
+import multer from "multer";
 
 const userRouter = express.Router();
 
@@ -19,6 +20,7 @@ userRouter.get("/get-profile", authUser, getProfile);
 userRouter.post(
   "/update-profile",
   authUser,
+  multer,
   upload.single("image"),
   updateProfile,
 );

@@ -12,11 +12,8 @@ connectCloudinary();
 // app config
 const app = express();
 const port = process.env.PORT || 4000;
-connectDB();
-connectCloudinary();
 
 const allowedOrigins = [
-  "https://prescription-backend-chi.vercel.app/",
   "https://prescription-user.vercel.app",
   "https://prescription-admin.vercel.app",
   "https://prescription-doctor.vercel.app",
@@ -69,9 +66,11 @@ const corsOptions = {
 };
 
 // middlewares
-app.use(express.json());
 app.use(cors(corsOptions));
 // app.options("/*", cors(corsOptions));
+connectDB();
+connectCloudinary();
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // api routes (endpoints)
