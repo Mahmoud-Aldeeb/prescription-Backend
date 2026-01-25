@@ -16,10 +16,10 @@ connectDB();
 connectCloudinary();
 
 const allowedOrigins = [
+  "https://prescription-backend-chi.vercel.app/",
   "https://prescription-user.vercel.app",
   "https://prescription-admin.vercel.app",
   "https://prescription-doctor.vercel.app",
-  "https://prescription-backend-chi.vercel.app/",
   "http://localhost:3000",
   "http://localhost:3001",
   "http://localhost:3002",
@@ -29,11 +29,24 @@ const corsOptions = {
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
 
-    if (allowedOrigins.indexOf(origin) !== -1) {
+    //   if (allowedOrigins.indexOf(origin) !== -1) {
+    //     callback(null, true);
+    //   } else {
+    //     console.log(`❌ CORS Blocked: ${origin}`);
+    //     callback(new Error("Not allowed by CORS"));
+    //   }
+    // },
+    const isAllowed = allowedOrigins.some(
+      (allowedOrigin) =>
+        origin === allowedOrigin ||
+        origin.startsWith(allowedOrigin.replace("https://", "http://")),
+    );
+
+    if (isAllowed) {
       callback(null, true);
     } else {
-      console.log(`❌ CORS Blocked: ${origin}`);
-      callback(new Error("Not allowed by CORS"));
+      console.log(`🚫 CORS Blocked: ${origin}`);
+      callback(null, false);
     }
   },
   credentials: true,
@@ -52,12 +65,13 @@ const corsOptions = {
   ],
   exposedHeaders: ["Content-Range", "X-Content-Range"],
   maxAge: 86400,
+  optionsSuccessStatus: 200,
 };
 
 // middlewares
 app.use(express.json());
 app.use(cors(corsOptions));
-// app.options("*", cors(corsOptions));
+// app.options("/*", cors(corsOptions));
 app.use(express.urlencoded({ extended: true }));
 
 // api routes (endpoints)

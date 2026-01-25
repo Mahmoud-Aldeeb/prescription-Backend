@@ -108,9 +108,25 @@ const updateProfile = async (req, res) => {
     }
     if (imageFile) {
       try {
-        const imageUpload = await cloudinary.uploader.upload(imageFile.path, {
-          folder: "users",
-          resource_type: "image",
+        // const imageUpload = await cloudinary.uploader.upload(imageFile.path, {
+        //   folder: "users",
+        //   resource_type: "image",
+        // });
+        const imageUpload = await new Promise((resolve, reject) => {
+          const uploadStream = cloudinary.uploader.upload_stream(
+            {
+              folder: "users",
+              resource_type: "image",
+              public_id: `user_${userId}_${Date.now()}`,
+            },
+            (error, result) => {
+              if (error) reject(error);
+              else resolve(result);
+            },
+          );
+
+          // ⭐ أرسل buffer إلى Cloudinary
+          uploadStream.end(imageFile.buffer);
         });
         imageUrl = imageUpload.secure_url;
         updateData.image = imageUrl;
@@ -241,7 +257,7 @@ const cancelAppointment = async (req, res) => {
 
     let slots_booked = doctorData.slots_booked;
     slots_booked[slotDate] = slots_booked[slotDate].filter(
-      (time) => time !== slotTime
+      (time) => time !== slotTime,
     );
 
     await doctorModel.findByIdAndUpdate(docId, {
