@@ -19,6 +19,7 @@ const allowedOrigins = [
   "https://prescription-user.vercel.app",
   "https://prescription-admin.vercel.app",
   "https://prescription-doctor.vercel.app",
+  "https://prescription-backend-chi.vercel.app/",
   "http://localhost:3000",
   "http://localhost:3001",
   "http://localhost:3002",
@@ -53,7 +54,7 @@ const corsOptions = {
 // middlewares
 app.use(express.json());
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
+// app.options("*", cors(corsOptions));
 app.use(express.urlencoded({ extended: true }));
 
 // api routes (endpoints)
