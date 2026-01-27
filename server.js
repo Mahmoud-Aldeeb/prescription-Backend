@@ -20,6 +20,7 @@ connectCloudinary();
 // app.use(cors());
 const allowedOrigins = [
   "https://prescription-user.vercel.app",
+  "https://prescription-admin-doctor.vercel.app",
   "http://localhost:5173",
   "http://localhost:5174",
 ];
@@ -41,6 +42,8 @@ app.use(
       "Content-Type",
       "Authorization",
       "token",
+      "aToken",
+      "dToken",
       "X-Requested-With",
     ],
     exposedHeaders: ["Content-Range", "X-Content-Range"],
