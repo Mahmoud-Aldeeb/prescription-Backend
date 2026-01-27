@@ -31,3 +31,6 @@ Thumbs.db
 logs/
 *.log
 EOF
+
+
+uploads/

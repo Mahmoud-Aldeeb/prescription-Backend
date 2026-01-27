@@ -12,77 +12,41 @@ connectCloudinary();
 // app config
 const app = express();
 const port = process.env.PORT || 4000;
+connectDB();
+connectCloudinary();
 
-// const allowedOrigins = [
-//   "https://prescription-user.vercel.app",
-//   "https://prescription-admin.vercel.app",
-//   "https://prescription-doctor.vercel.app",
-//   "http://localhost:3000",
-//   "http://localhost:5173",
-//   "http://localhost:5174",
-//   "http://localhost:3001",
-//   "http://localhost:3002",
-// ];
+// middlewares
 
-// const corsOptions = {
-//   origin: function (origin, callback) {
-//     if (!origin) return callback(null, true);
-
-//     //   if (allowedOrigins.indexOf(origin) !== -1) {
-//     //     callback(null, true);
-//     //   } else {
-//     //     console.log(`❌ CORS Blocked: ${origin}`);
-//     //     callback(new Error("Not allowed by CORS"));
-//     //   }
-//     // },
-//     const isAllowed = allowedOrigins.some(
-//       (allowedOrigin) =>
-//         origin === allowedOrigin ||
-//         origin.startsWith(allowedOrigin.replace("https://", "http://")),
-//     );
-
-//     if (isAllowed) {
-//       callback(null, true);
-//     } else {
-//       console.log(`🚫 CORS Blocked: ${origin}`);
-//       callback(null, false);
-//     }
-//   },
-//   credentials: true,
-//   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-//   allowedHeaders: [
-//     "Content-Type",
-//     "Authorization",
-//     "X-Requested-With",
-//     "Accept",
-//     "Origin",
-//     "token",
-//     "aToken",
-//     "dToken",
-//     "x-auth-token",
-//     "x-access-token",
-//   ],
-//   exposedHeaders: ["Content-Range", "X-Content-Range"],
-//   maxAge: 86400,
-//   optionsSuccessStatus: 200,
-// };
-
-// // middlewares
-// app.use(cors(corsOptions));
-// app.options("/*", cors(corsOptions));
-
-app.use(cors());
-
-// أو السماح لنطاق محدد (أفضل للإنتاج)
+// app.use(cors());
+const allowedOrigins = [
+  "https://prescription-user.vercel.app",
+  "http://localhost:5173",
+  "http://localhost:5174",
+];
 app.use(
   cors({
-    origin: "https://prescription-user.vercel.app",
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        console.log("CORS blocked origin:", origin);
+        callback(new Error("Not allowed by CORS"), false);
+      }
+    },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "token",
+      "X-Requested-With",
+    ],
+    exposedHeaders: ["Content-Range", "X-Content-Range"],
   }),
 );
 
-connectDB();
-connectCloudinary();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

@@ -80,68 +80,76 @@ const updateProfile = async (req, res) => {
     const { name, phone, address, gender, dob } = req.body;
     const userId = req.userId;
     const imageFile = req.file;
-    if (!name || !phone || !address || !gender || !dob) {
-      return res.json({ success: false, message: "Missing Details" });
+
+    if (!userId) {
+      return res.json({ success: false, message: "User ID not found" });
     }
-    const updateData = {
-      name,
-      phone,
-      gender,
-      dob: dob || null,
-    };
+
+    const existingUser = await userModel.findById(userId);
+    if (!existingUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    const updateData = {};
+    if (name) updateData.name = name;
+    if (phone) updateData.phone = phone;
+    if (gender) updateData.gender = gender;
+    if (dob) updateData.dob = dob;
+
     if (address) {
       try {
-        // updateData.address = JSON.parse(address);
-
         if (typeof address === "string") {
-          updateData.address = JSON.parse(address);
+          if (
+            address.trim().startsWith("{") ||
+            address.trim().startsWith("[")
+          ) {
+            updateData.address = JSON.parse(address);
+          } else {
+            updateData.address = { line1: address, line2: "" };
+          }
         } else if (typeof address === "object" && address !== null) {
           updateData.address = address;
         } else {
-          updateData.address = String(address);
+          updateData.address = { line1: String(address), line2: "" };
         }
       } catch (error) {
-        // updateData.address = address;
-        console.log(error);
-        res.json({ success: false, message: error.message });
+        console.log("Address parsing error:", error);
+        updateData.address = { line1: String(address), line2: "" };
       }
     }
+
     if (imageFile) {
       try {
-        // const imageUpload = await cloudinary.uploader.upload(imageFile.path, {
-        //   folder: "users",
-        //   resource_type: "image",
-        // });
-        const imageUpload = await new Promise((resolve, reject) => {
-          const uploadStream = cloudinary.uploader.upload_stream(
-            {
-              folder: "users",
-              resource_type: "image",
-              public_id: `user_${userId}_${Date.now()}`,
-            },
-            (error, result) => {
-              if (error) reject(error);
-              else resolve(result);
-            },
-          );
-
-          uploadStream.end(imageFile.buffer);
+        const imageUpload = await cloudinary.uploader.upload(imageFile.path, {
+          folder: "users",
+          resource_type: "image",
         });
+
         imageUrl = imageUpload.secure_url;
         updateData.image = imageUrl;
       } catch (error) {
         console.log("Image upload error:", error);
-        return res.json({
-          success: false,
-          message: "Failed to upload image",
-        });
       }
     }
+    if (Object.keys(updateData).length === 0 && !imageFile) {
+      return res.json({
+        success: false,
+        message: "No data provided for update",
+      });
+    }
+
     const updatedUser = await userModel
-      .findByIdAndUpdate(userId, updateData, {
-        new: true,
-        runValidators: true,
-      })
+      .findByIdAndUpdate(
+        userId,
+        { $set: updateData },
+        {
+          new: true,
+          runValidators: true,
+        },
+      )
       .select("-password");
 
     if (!updatedUser) {
@@ -156,10 +164,12 @@ const updateProfile = async (req, res) => {
       message: "Profile Updated Successfully",
       user: updatedUser,
     });
-    // res.json({ success: true, message: "Profile Updated" });
   } catch (error) {
     console.log(error);
-    res.json({ success: false, message: error.message });
+    res.json({
+      success: false,
+      message: error.message || "Internal server error",
+    });
   }
 };
 
