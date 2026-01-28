@@ -28,7 +28,7 @@ const doctorSchema = new mongoose.Schema(
       required: true,
     },
     experience: {
-      type: Number,
+      type: String,
       required: true,
     },
     about: {
@@ -58,7 +58,7 @@ const doctorSchema = new mongoose.Schema(
   },
   {
     minimize: false,
-  }
+  },
 );
 
 const doctorModel =

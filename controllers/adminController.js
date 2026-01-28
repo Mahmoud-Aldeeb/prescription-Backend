@@ -29,12 +29,12 @@ const addDoctor = async (req, res) => {
         message: "Doctor image is required",
       });
     }
-    if (!imageFile.path) {
-      return res.status(400).json({
-        success: false,
-        message: "Image file path is missing. Check multer configuration.",
-      });
-    }
+    // if (!imageFile.path) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "Image file path is missing. Check multer configuration.",
+    //   });
+    // }
 
     // check for all data to add doctor
     if (
@@ -48,9 +48,9 @@ const addDoctor = async (req, res) => {
       !fees ||
       !address
     ) {
-      if (imageFile.path && fs.existsSync(imageFile.path)) {
-        fs.unlinkSync(imageFile.path);
-      }
+      // if (imageFile.path && fs.existsSync(imageFile.path)) {
+      //   fs.unlinkSync(imageFile.path);
+      // }
       return res.json({ success: false, message: "Missing Details" });
     }
     // validating email format
@@ -72,21 +72,31 @@ const addDoctor = async (req, res) => {
     // upload image to Cloudinary
     let imageUrl;
     try {
-      const imageUpload = await cloudinary.uploader.upload(imageFile.path, {
-        folder: "doctors",
-        resource_type: "image",
-      });
+      console.log("Uploading image to Cloudinary...");
+      const imageString = imageFile.buffer.toString("base64");
+      // const imageUpload = await cloudinary.uploader.upload(imageFile.path, {
+      //   folder: "doctors",
+      //   resource_type: "image",
+      // });
+      const imageUpload = await cloudinary.uploader.upload(
+        `data:${imageFile.mimetype};base64,${imageString}`,
+        {
+          folder: "doctors",
+          resource_type: "image",
+        },
+      );
 
       imageUrl = imageUpload.secure_url;
-      if (fs.existsSync(imageFile.path)) {
-        fs.unlinkSync(imageFile.path);
-        console.log("Temporary file deleted");
-      }
+      // if (fs.existsSync(imageFile.path)) {
+      //   fs.unlinkSync(imageFile.path);
+      //   console.log("Temporary file deleted");
+      // }
+      console.log("✅ Image uploaded to Cloudinary:", imageUrl);
     } catch (error) {
-      console.log(error);
-      if (imageFile.path && fs.existsSync(imageFile.path)) {
-        fs.unlinkSync(imageFile.path);
-      }
+      console.log("Cloudinary upload error:", error);
+      // if (imageFile.path && fs.existsSync(imageFile.path)) {
+      //   fs.unlinkSync(imageFile.path);
+      // }
       return res.status(500).json({
         success: false,
         message: "Error uploading image to Cloudinary",
@@ -111,9 +121,9 @@ const addDoctor = async (req, res) => {
       password: hashedPassword,
       speciality,
       degree,
-      experience,
+      experience: String(experience),
       about,
-      fees,
+      fees: Number(fees),
       address: parsedAddress,
       data: Date.now(),
     };
@@ -122,7 +132,16 @@ const addDoctor = async (req, res) => {
     res.json({ success: true, message: "Doctor Added Successfully" });
   } catch (error) {
     console.log(error);
-    res.json({ success: false, message: error.message });
+    if (error.code === 11000) {
+      return res.json({
+        success: false,
+        message: "Email already exists",
+      });
+    }
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 

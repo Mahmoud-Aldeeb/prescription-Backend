@@ -123,13 +123,23 @@ const updateProfile = async (req, res) => {
 
     if (imageFile) {
       try {
-        const imageUpload = await cloudinary.uploader.upload(imageFile.path, {
-          folder: "users",
-          resource_type: "image",
-        });
+        console.log("Uploading user image to Cloudinary...");
+        const imageString = imageFile.buffer.toString("base64");
+        // const imageUpload = await cloudinary.uploader.upload(imageFile.path, {
+        //   folder: "users",
+        //   resource_type: "image",
+        // });
+        const imageUpload = await cloudinary.uploader.upload(
+          `data:${imageFile.mimetype};base64,${imageString}`,
+          {
+            folder: "users",
+            resource_type: "image",
+          },
+        );
 
         imageUrl = imageUpload.secure_url;
         updateData.image = imageUrl;
+        console.log("✅ User image uploaded to Cloudinary");
       } catch (error) {
         console.log("Image upload error:", error);
       }
