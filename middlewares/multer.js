@@ -1,58 +1,80 @@
-// import multer from "multer";
-// import path from "path";
-
-// // تخزين الملفات مؤقتًا في memory
-// const storage = multer.diskStorage({
-//   destination: function (req, file, cb) {
-//     cb(null, "uploads/"); // يجب إنشاء مجلد uploads
-//   },
-//   filename: function (req, file, cb) {
-//     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-//     cb(
-//       null,
-//       file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname),
-//     );
-//   },
-// });
-
-// // تصفية أنواع الملفات
-// const fileFilter = (req, file, cb) => {
-//   if (file.mimetype.startsWith("image/")) {
-//     cb(null, true);
-//   } else {
-//     cb(new Error("Only image files are allowed"), false);
-//   }
-// };
-
-// const upload = multer({
-//   storage: storage,
-//   fileFilter: fileFilter,
-//   limits: {
-//     fileSize: 5 * 1024 * 1024, // 5MB
-//   },
-// });
-
-// export default upload;
-
 import multer from "multer";
 
-// استخدم memoryStorage بدلاً من diskStorage
 const storage = multer.memoryStorage();
+
+const FILE_SETTINGS = {
+  MAX_SIZE: 4 * 1024 * 1024, // 4MB
+  ALLOWED_TYPES: [
+    "image/jpeg",
+    "image/jpg",
+    "image/png",
+    "image/gif",
+    "image/webp",
+  ],
+  ALLOWED_EXTENSIONS: ["jpeg", "jpg", "png", "gif", "webp"],
+};
+
+const fileValidation = (req, res, next) => {
+  if (!req.file) {
+    return next();
+  }
+
+  const file = req.file;
+  const errors = [];
+
+  // التحقق من الحجم
+  if (file.size > FILE_SETTINGS.MAX_SIZE) {
+    errors.push(
+      `File is too large. Maximum size is ${FILE_SETTINGS.MAX_SIZE / (1024 * 1024)}MB`,
+    );
+  }
+
+  // التحقق من النوع
+  if (!FILE_SETTINGS.ALLOWED_TYPES.includes(file.mimetype)) {
+    errors.push(
+      `Invalid file type. Allowed: ${FILE_SETTINGS.ALLOWED_EXTENSIONS.join(", ")}`,
+    );
+  }
+
+  // التحقق من الامتداد
+  const fileExtension = file.originalname.toLowerCase().split(".").pop();
+  if (!FILE_SETTINGS.ALLOWED_EXTENSIONS.includes(fileExtension)) {
+    errors.push(
+      `Invalid file extension. Allowed: ${FILE_SETTINGS.ALLOWED_EXTENSIONS.join(", ")}`,
+    );
+  }
+
+  if (errors.length > 0) {
+    return res.status(400).json({
+      success: false,
+      message: errors.join(" - "),
+    });
+  }
+
+  next();
+};
 
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 4 * 1024 * 1024, // 4MB
+    fileSize: FILE_SETTINGS.MAX_SIZE,
   },
   fileFilter: (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|gif|webp/;
-    const mimetype = allowedTypes.test(file.mimetype);
-
-    if (mimetype) {
-      return cb(null, true);
+    if (FILE_SETTINGS.ALLOWED_TYPES.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(
+        new Error(
+          `Invalid file type. Allowed: ${FILE_SETTINGS.ALLOWED_EXTENSIONS.join(", ")}`,
+        ),
+      );
     }
-    cb(new Error("Only images are allowed (JPEG, JPG, PNG, GIF, WebP)"));
   },
 });
+
+export const uploadWithValidation = (fieldName) => [
+  upload.single(fieldName),
+  fileValidation,
+];
 
 export default upload;

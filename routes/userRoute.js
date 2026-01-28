@@ -31,17 +31,7 @@ userRouter.options("/update-profile", (req, res) => {
 userRouter.post(
   "/update-profile",
   authUser,
-  (req, res, next) => {
-    // ✅ معالجة multipart/form-data يدويًا إذا لزم الأمر
-    if (
-      req.headers["content-type"] &&
-      req.headers["content-type"].includes("multipart/form-data")
-    ) {
-      console.log("Processing multipart/form-data request");
-    }
-    next();
-  },
-  upload.single("image"),
+  uploadWithValidation("image"),
   updateProfile,
 );
 
