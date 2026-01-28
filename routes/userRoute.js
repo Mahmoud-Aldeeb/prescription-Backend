@@ -9,7 +9,7 @@ import {
   cancelAppointment,
 } from "../controllers/userController.js";
 import authUser from "../middlewares/authUser.js";
-import upload from "../middlewares/multer.js";
+import { uploadWithValidation } from "../middlewares/multer.js";
 
 const userRouter = express.Router();
 
